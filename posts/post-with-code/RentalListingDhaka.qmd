@@ -49,7 +49,7 @@ ADM3_list <- as.vector(st_drop_geometry(shape_file_3['ADM3_EN']))[['ADM3_EN']]
 Load ADMIN4 areas and keep only those that are inside the same area as ADM3_list
 
 ```{r message=FALSE, include=FALSE}
-shape_file_4 = st_read("bgd_admbnda_adm4_bbs_20201113.shp")
+shape_file_4 = st_read("shape_file_4_small.shp")
 
 shape_file_4 = shape_file_4 %>% subset(ADM2_EN == 'Dhaka') 
 shape_file_4p = shape_file_4 %>% subset(ADM3_EN %in% ADM3_list)
