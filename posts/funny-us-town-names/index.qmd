@@ -1,0 +1,244 @@
+---
+title: "Funny Town"
+author: "Fargana Islam"
+date: "2023-03-01"
+categories: [fun project]
+---
+
+A dummy intro to what is going to happen.
+
+```{r message=FALSE}
+library(rvest)
+library(RSelenium)
+library(dplyr)
+```
+
+Let's read from the link <https://www.farandwide.com/s/wacky-town-names-47d4c1c59a624a70>
+
+```{r}
+link <- "https://www.farandwide.com/s/wacky-town-names-47d4c1c59a624a70"
+```
+
+I will run the following command from the terminal to start the Docker container which will act like a server `docker run -d -p 4445:4444 selenium/standalone-firefox`
+
+```{r}
+remDr <- remoteDriver(
+
+  remoteServerAddr = "localhost",
+
+  port = 4445L,
+
+  browserName = "firefox"
+
+)
+
+```
+
+```{r eval=FALSE}
+remDr$open()
+```
+
+```{r eval=FALSE}
+remDr$navigate(link)
+```
+
+```{r eval=FALSE}
+webElem <- remDr$findElement("xpath", "/html/body")
+
+# Scroll down 10 times
+for(i in 1:10){      
+  webElem$sendKeysToElement(list(key = "end"))
+  # please make sure to sleep a couple of seconds because it takes time to load contents
+  Sys.sleep(5)    
+}
+```
+
+```{r eval=FALSE}
+page_source <- remDr$getPageSource()
+```
+
+```{r eval=FALSE}
+all_funny_names <- read_html(page_source[[1]]) %>% html_nodes(".list-item-title") %>% html_text()
+```
+
+```{r, echo=FALSE, eval=TRUE}
+all_funny_names <- read.csv("all_funny_names.csv")
+```
+
+Since, the article says 65 town names let's peek at the values from 61-70 and decide where to cut-off.
+
+```{r}
+(all_funny_names$x %>% head(70) %>% tail(10))
+```
+
+Looks like it ends with Zzyzx, California or at index 65. Others are promotional towns featured in the article. Let's filter everything after the 65th one.
+
+```{r}
+all_funny_names <- all_funny_names[1:65,]
+```
+
+Here's the final list.
+
+```{r}
+all_funny_names$x
+```
+
+This web article is certainly not the first one to march this direction. A quick Google search gave me a book titled "**The Cafeteria Lady Eats Her Way Across America: And Lives to Tell About It!"** which has a chapter"A Town By Any Other Name" dedicated to stringing these names together into a narrative. Luckily, these pages are available for preview in the Google books website so if anybody wants they can check it out. There's also a line in one of the Wrens' song "Why into Whynot" but I have no proof they meant the towns Why, Arizona and Whynot, North Carolina.
+
+Inspired by these, I wanted to make a comprehensive list of all the names. So I went looking for the largest list of US town names available in the internet. There were quite a few and one from the [Github](https://github.com/grammakov/USA-cities-and-states) had 60k+ records. Of course, I am not going to comb through this list so I started thinking of better approaches.
+
+The first idea that I had was to use a dictionary. Most of the words in the web article and the book were actually dictionary words except for a few goofy ones. So I decided to use the hunspell library to filter out town names that are not dictionary words.
+
+```{r}
+all_town_df <- read.csv('us_cities_states_counties.csv', sep="|")
+```
+
+```{r}
+library(hunspell)
+```
+
+```{r}
+selected_indices <- all_town_df$City.alias %>% hunspell_check(dict=dictionary("en_US"))
+all_town_df_filtered <- all_town_df %>% filter(selected_indices)
+```
+
+That didn't help much. We still have `r length(selected_indices)` entries left. But most of them should be duplicates and a lot of them could have a really high frequency (think Springfield). We are not interested in the high frequency ones, good things come in small portion. Let's use `table()` then `hist()` to see the frequency distribution.
+
+```{r}
+frequency_table <- table(all_town_df_filtered$City.alias)
+hist(frequency_table)
+```
+
+We still have a lot of town names that are not frequent but still a dictionary word. Let's say any town name that appears more than 4 times is more or less accepted by the people as a common town name and filter those out.
+
+```{r}
+less_common_town_names <- names(frequency_table[frequency_table <= 4])
+all_town_df_filtered <- all_town_df_filtered %>% filter(City.alias %in% less_common_town_names)
+```
+
+There's still `r length(less_common_town_names)` town names left for us to comb through. Now I want to see some of the names to come up with an idea on how to proceed.
+
+```{r}
+less_common_town_names %>% head(50)
+```
+
+As much as it is interesting to hear about Alabama, New York, I am looking for something that gives a stronger kick upon hearing it. There are enough Paris, Texas references in the world for it to have become trivial by now. There are also people names such as Abraham, Agnes, Adolph that are in the `hunspell` dictionary that are better off being filtered. In fact, therein lies the problem. `hunspell` dictionary is too much inclusive for our task. We need a dictionary that is less interested in the proper nouns.
+
+After looking around for a while, I found the [freeDictionaryAPI](https://dictionaryapi.dev/) which can be queried using the url `https://api.dictionaryapi.dev/api/v2/entries/en/{word}`. So I initially tried to use `url_exists()` function of `RCurl` library but that ended up in 429 errors (too many requests). I could have used `Sys.sleep()` but I decided to poke around the freeDictionaryAPI looking for ways to query with multiple words. I found something even better. There is a word list directly available in their Github page.
+
+```{r}
+dictionary_file <- file('freeDictionaryAPI.txt')
+freeDictionaryAPI_words <- readLines(dictionary_file)
+close(dictionary_file)
+```
+
+Now let's run the function over `less_common_town_names` and filter based on the result. I am using `purrr::map_lgl()` to avoid writing a loop in this case.
+
+```{r}
+words_with_definition <- tolower(less_common_town_names) %in% freeDictionaryAPI_words
+```
+
+```{r}
+town_names <- less_common_town_names %>% subset(words_with_definition)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+output_file <- file("town_names_only.txt")
+writeLines(town_names, output_file)
+close(output_file)
+```
+
+```{r}
+set.seed(42)
+sample(town_names, 50)
+```
+
+We still have `r length(town_names)` names left. I printed 50 random samples above to see if this is what we were looking for from the first place. The results don't look too bad, you definitely won't expect most of them to be a town name. Any attempt at shortening the current list has a high probability of removing some interesting town names. That's why I will keep it as it is for now.
+
+Some names that really surprised me:
+
+-   Tea, South Dakota
+
+-   Bachelor, Missouri
+
+-   Bonus, Illinois
+
+-   Electron, Washington
+
+-   Home, Washington
+
+-   Sweet Home, Oregon
+
+-   Junior, West Virginia
+
+-   Leisure, Indiana
+
+-   Man, West Virginia
+
+-   Magazine, Arkansas
+
+-   Oil, Indiana
+
+-   Printer, Kentucky
+
+-   Republican, Arkansas
+
+One final thing I want to do is show the remaining towns on the `OpenStreetMap` using `Leaflet`. But before I do that, I need to actually get their location.
+
+```{r}
+funny_town_df <- all_town_df %>% filter(City.alias %in% town_names)
+```
+
+```{r}
+funny_town_df["address"] <- paste0(funny_town_df$City.alias, ", ", funny_town_df$State.full)
+```
+
+```{r eval=FALSE}
+api_key <- "API_KEY"
+library(ggmap)
+register_google(api_key)
+```
+
+```{r eval=FALSE}
+funny_town_df <- funny_town_df %>% mutate_geocode(address)
+```
+
+```{r, hidden, echo=FALSE, eval=TRUE}
+funny_town_df <- read.csv('funny_town_names_output.csv')
+funny_town_df <- funny_town_df %>% filter(!is.na(lon))
+```
+
+After the `lon` and `lat` values are retrieved, we can quickly convert it to sf.
+
+```{r message=FALSE}
+library(sf)
+library(leaflet)
+library(OpenStreetMap)
+library(osmdata)
+```
+
+```{r}
+funny_town_sf <- st_as_sf(funny_town_df, coords=c("lon", "lat"), crs = 4326)
+```
+
+Google map might have looked for places with similar name elsewhere in the world when one was not found within the United States. We need to filter those out.
+
+```{r}
+library(spData)
+data('world')
+usa_map <- world[world$name_long == "United States",]
+```
+
+```{r}
+funny_town_sf <- funny_town_sf %>% filter(lengths(st_intersects(funny_town_sf, usa_map)) > 0)
+```
+
+```{r}
+(m <- leaflet() %>%
+  addTiles() %>% 
+  addProviderTiles("OpenStreetMap.HOT", group = "Humanitarian") %>% 
+  addTiles(options = providerTileOptions(noWrap = TRUE), group = "Default") %>% 
+  # addMarkers(lng = dhaka_long, lat = dhaka_lat, popup='Dhaka') %>% 
+  # addRectangles(bbox_val[[1]], bbox_val[[2]], bbox_val[[3]], bbox_val[[4]]) %>%
+  addMarkers(data=funny_town_sf, clusterOptions = markerClusterOptions()))
+```
