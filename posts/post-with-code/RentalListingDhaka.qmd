@@ -6,11 +6,9 @@ categories: [news, code, analysis]
 image: "dhaka_3d.png"
 ---
 
-## Quarto
+## Where to Look for Cheap Rental Flats in Dhaka
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-A snapshot of the final 3D Map
+This is probably what the title of this article could have been if it was a clickbait attempt. But I think the image below serves a similar purpose. Now I will walk you through what steps I undertook to get this comparative visualization of rental apartment costs around Dhaka.
 
 ![](dhaka_3d.png)
 
@@ -27,13 +25,9 @@ library(osmdata)
 library(leaflet)
 ```
 
-Loading the shape files of three different layers of administrative distribution.
+Loading the shape files of three different layers of administrative distribution. I downloaded all this from [data.world](data.world). There are 4 different administrative area categories in Bangladesh. ADMIN1: the divisions, ADMIN2: the districts, ADMIN3: upazillas/sectors (the latter for cities), ADMIN4: unions/wards (the former for rural areas, the latter for cities). Since I am only interested in the city of Dhaka which is a part of the district Dhaka, I am only interested in the layers ADMIN3 and ADMIN4. I will also call areas from these layers as ADMIN3 area and ADMIN4 area respectively.
 
 ```{r message=FALSE}
-shape_file = st_read("bgd_admbnda_adm0_bbs_20201113.shp")
-
-shape_file_2 = st_read("bgd_admbnda_adm2_bbs_20201113.shp")
-
 shape_file_3 = st_read("bgd_admbnda_adm3_bbs_20201113.shp")
 ```
 
@@ -61,20 +55,17 @@ Visualizing the map on leaflet
 bbox_val <- st_bbox(shape_file_4p)
 
 (m <- leaflet() %>%
-  addTiles() %>% addProviderTiles("Stamen.TonerLite", group = "Toner Lite") %>% 
-  addProviderTiles("Stamen.TonerHybrid", group = "Toner Hybrid") %>% 
-  addProviderTiles("Stamen.Watercolor", group = "Watercolor") %>% 
+  addTiles() %>% 
   addProviderTiles("OpenStreetMap.HOT", group = "Humanitarian") %>% 
-  addTiles(options = providerTileOptions(noWrap = TRUE), group = "Default") %>% 
-  addProviderTiles("CartoDB.DarkMatterNoLabels", group = "Dark Matter") %>% 
+  addTiles(options = providerTileOptions(noWrap = TRUE), group = "Default") %>%
   # addMarkers(lng = dhaka_long, lat = dhaka_lat, popup='Dhaka') %>% 
   # addRectangles(bbox_val[[1]], bbox_val[[2]], bbox_val[[3]], bbox_val[[4]]) %>%
   addPolygons(data = shape_file_3, fillOpacity = 0.1, label = ~ADM3_EN, weight=1.5,
-              labelOptions = labelOptions(noHide = TRUE, textOnly = TRUE, style = list("font-size"="8px", "color"="white"))
+              labelOptions = labelOptions(noHide = TRUE, textOnly = TRUE, style = list("font-size"="8px", "color"="blue"))
               ))
 ```
 
-Read rental price data
+Now let's read the rental price data. This is from a [kaggle dataset](https://www.kaggle.com/datasets/ijajdatanerd/property-listing-data-in-bangladesh). The provider scraped it from the popular website [bproperty.com](bproperty.com) and released it under CC0 license.
 
 ```{r}
 property_data <- read.csv('property_listing_data_in_Bangladesh.csv')

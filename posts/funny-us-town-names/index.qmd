@@ -1,8 +1,9 @@
 ---
 title: "Funny Town"
 author: "Fargana Islam"
-date: "2023-03-01"
+date: "2023-03-04"
 categories: [fun project]
+image: "Moody_AL.jpg"
 ---
 
 Recently, I came across an web article titled [65 Funny Town Names Across the U.S.](https://www.farandwide.com/s/wacky-town-names-47d4c1c59a624a70) Ever since I started living in the states, I was awed by the simultaneous banality and eccentricity of the country's town names. As I was scrolling through the ad explosion of the article, I kept wondering what one has to do make such a list and also whether the list covers all the funny town names after all. So I decided to do this fun endeavor. Here are a few pictures showcasing some of the interesting names I found. The images are courtesy of Google Maps.
