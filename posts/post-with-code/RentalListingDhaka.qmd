@@ -29,7 +29,7 @@ library(leaflet)
 
 Loading the shape files of three different layers of administrative distribution.
 
-```{r message=FALSE, include=FALSE}
+```{r message=FALSE}
 shape_file = st_read("bgd_admbnda_adm0_bbs_20201113.shp")
 
 shape_file_2 = st_read("bgd_admbnda_adm2_bbs_20201113.shp")
@@ -39,7 +39,7 @@ shape_file_3 = st_read("bgd_admbnda_adm3_bbs_20201113.shp")
 
 Only keeping the ADMIN3 areas that are situated in the Dhaka metropolitan area.
 
-```{r message=FALSE, include=FALSE}
+```{r message=FALSE}
 shape_file_3 = shape_file_3 %>% subset(ADM2_EN == 'Dhaka')
 shape_file_3 = shape_file_3 %>% filter(Shape_Area < 1.00e-02)
 ADM3_list <- as.vector(st_drop_geometry(shape_file_3['ADM3_EN']))[['ADM3_EN']]
@@ -47,7 +47,7 @@ ADM3_list <- as.vector(st_drop_geometry(shape_file_3['ADM3_EN']))[['ADM3_EN']]
 
 Load ADMIN4 areas and keep only those that are inside the same area as ADM3_list
 
-```{r message=FALSE, include=FALSE}
+```{r message=FALSE}
 shape_file_4 = st_read("shape_file_4_small.shp")
 
 shape_file_4 = shape_file_4 %>% subset(ADM2_EN == 'Dhaka') 

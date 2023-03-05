@@ -222,17 +222,35 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
-<p>A dummy intro to what is going to happen.</p>
+<p>Recently, I came across an web article titled <a href="https://www.farandwide.com/s/wacky-town-names-47d4c1c59a624a70">65 Funny Town Names Across the U.S.</a> Ever since I started living in the states, I was awed by the simultaneous banality and eccentricity of the country’s town names. As I was scrolling through the ad explosion of the article, I kept wondering what one has to do make such a list and also whether the list covers all the funny town names after all. So I decided to do this fun endeavor. Here are a few pictures showcasing some of the interesting names I found. The images are courtesy of Google Maps.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Man_WV.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">A church located in Man, West Virginia</figcaption><p></p>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Moody_AL.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">A motor shop located in Moody, Alabama</figcaption><p></p>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Magazine_AR.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">A water tank located in Magazine, Arkansas</figcaption><p></p>
+</figure>
+</div>
+<p>The endeavor would be incomplete if I don’t list the names from the article first. But the invasive advertisement made it hard for me to scroll any farther down and I decided to scrape from the web article using RSelenium.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rvest)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(RSelenium)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Let’s read from the link <a href="https://www.farandwide.com/s/wacky-town-names-47d4c1c59a624a70" class="uri">https://www.farandwide.com/s/wacky-town-names-47d4c1c59a624a70</a></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>link <span class="ot">&lt;-</span> <span class="st">"https://www.farandwide.com/s/wacky-town-names-47d4c1c59a624a70"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>I will run the following command from the terminal to start the Docker container which will act like a server <code>docker run -d -p 4445:4444&nbsp;selenium/standalone-firefox</code></p>
+<p>I run the following command from the terminal to start the Docker container which will act like a server <code>docker run -d -p 4445:4444&nbsp;selenium/standalone-firefox</code>. Then I use <code>RSelenium</code> to launch a headless browser from the server which will read the article for me. The browser loads the webpage and keeps pressing <code>End</code> key to scroll down and get a glimpse of everything. Finally, it collects the names from the element of interest.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>remDr <span class="ot">&lt;-</span> <span class="fu">remoteDriver</span>(</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -250,6 +268,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>remDr<span class="sc">$</span><span class="fu">navigate</span>(link)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>This is where the browser keeps scrolling down.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>webElem <span class="ot">&lt;-</span> remDr<span class="sc">$</span><span class="fu">findElement</span>(<span class="st">"xpath"</span>, <span class="st">"/html/body"</span>)</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -263,13 +282,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>page_source <span class="ot">&lt;-</span> remDr<span class="sc">$</span><span class="fu">getPageSource</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>I used inspect on my real browser to discover the fact that <code>list-item-title</code> is the element/node I am looking for. That is primarily because I am a noob. I am sure any decent-skilled web scraper would have found a smart way to do it from the headless browser.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>all_funny_names <span class="ot">&lt;-</span> <span class="fu">read_html</span>(page_source[[<span class="dv">1</span>]]) <span class="sc">%&gt;%</span> <span class="fu">html_nodes</span>(<span class="st">".list-item-title"</span>) <span class="sc">%&gt;%</span> <span class="fu">html_text</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
 
 </div>
-<p>Since, the article says 65 town names let’s peek at the values from 61-70 and decide where to cut-off.</p>
+<p>Looks like we got 2 titles. There may have been similar elements in the web page that we don’t want. Since, the article says 65 town names let’s peek at the values from 61-70 and decide where to cut-off.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(all_funny_names<span class="sc">$</span>x <span class="sc">%&gt;%</span> <span class="fu">head</span>(<span class="dv">70</span>) <span class="sc">%&gt;%</span> <span class="fu">tail</span>(<span class="dv">10</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">

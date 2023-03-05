@@ -5,7 +5,15 @@ date: "2023-03-01"
 categories: [fun project]
 ---
 
-A dummy intro to what is going to happen.
+Recently, I came across an web article titled [65 Funny Town Names Across the U.S.](https://www.farandwide.com/s/wacky-town-names-47d4c1c59a624a70) Ever since I started living in the states, I was awed by the simultaneous banality and eccentricity of the country's town names. As I was scrolling through the ad explosion of the article, I kept wondering what one has to do make such a list and also whether the list covers all the funny town names after all. So I decided to do this fun endeavor. Here are a few pictures showcasing some of the interesting names I found. The images are courtesy of Google Maps.
+
+![A church located in Man, West Virginia](Man_WV.jpg)
+
+![A motor shop located in Moody, Alabama](Moody_AL.jpg)
+
+![A water tank located in Magazine, Arkansas](Magazine_AR.jpg)
+
+The endeavor would be incomplete if I don't list the names from the article first. But the invasive advertisement made it hard for me to scroll any farther down and I decided to scrape from the web article using RSelenium.
 
 ```{r message=FALSE}
 library(rvest)
@@ -13,15 +21,13 @@ library(RSelenium)
 library(dplyr)
 ```
 
-Let's read from the link <https://www.farandwide.com/s/wacky-town-names-47d4c1c59a624a70>
-
 ```{r}
 link <- "https://www.farandwide.com/s/wacky-town-names-47d4c1c59a624a70"
 ```
 
-I will run the following command from the terminal to start the Docker container which will act like a server `docker run -d -p 4445:4444 selenium/standalone-firefox`
+I run the following command from the terminal to start the Docker container which will act like a server `docker run -d -p 4445:4444 selenium/standalone-firefox`. Then I use `RSelenium` to launch a headless browser from the server which will read the article for me. The browser loads the webpage and keeps pressing `End` key to scroll down and get a glimpse of everything. Finally, it collects the names from the element of interest.
 
-```{r}
+```{r eval=FALSE}
 remDr <- remoteDriver(
 
   remoteServerAddr = "localhost",
@@ -42,6 +48,8 @@ remDr$open()
 remDr$navigate(link)
 ```
 
+This is where the browser keeps scrolling down.
+
 ```{r eval=FALSE}
 webElem <- remDr$findElement("xpath", "/html/body")
 
@@ -57,6 +65,8 @@ for(i in 1:10){
 page_source <- remDr$getPageSource()
 ```
 
+I used inspect on my real browser to discover the fact that `list-item-title` is the element/node I am looking for. That is primarily because I am a noob. I am sure any decent-skilled web scraper would have found a smart way to do it from the headless browser.
+
 ```{r eval=FALSE}
 all_funny_names <- read_html(page_source[[1]]) %>% html_nodes(".list-item-title") %>% html_text()
 ```
@@ -65,7 +75,7 @@ all_funny_names <- read_html(page_source[[1]]) %>% html_nodes(".list-item-title"
 all_funny_names <- read.csv("all_funny_names.csv")
 ```
 
-Since, the article says 65 town names let's peek at the values from 61-70 and decide where to cut-off.
+Looks like we got `r length(all_funny_names)` titles. There may have been similar elements in the web page that we don't want. Since, the article says 65 town names let's peek at the values from 61-70 and decide where to cut-off.
 
 ```{r}
 (all_funny_names$x %>% head(70) %>% tail(10))
