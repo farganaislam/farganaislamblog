@@ -1,0 +1,215 @@
+---
+title: "Tidy Tuesday: Numbats"
+author: "Fargana Islam"
+date: "2023-03-05"
+categories: [Tidy Tuesday]
+image: "640px-Numbat_Face.jpg"
+---
+
+Over the past few days, I have been looking for fun projects to do with R and inevitably I came across Tidy Tuesday. Naturally I decided to try on this week's dataset and so here I go with the numbats. The image is courtesy of Wikipedia.
+
+```{r message=FALSE}
+library(dplyr)
+library(tidyr)
+library(formatR)
+```
+
+```{r message=FALSE}
+
+# Get the Data
+
+# Read in with tidytuesdayR package 
+# Install from CRAN via: install.packages("tidytuesdayR")
+# This loads the readme and all the datasets for the week of interest
+
+# Either ISO-8601 date or year/week works!
+
+numbats <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-03-07/numbats.csv')
+```
+
+```{r}
+colnames(numbats)
+```
+
+Let's look at a few of the columns and their possible values.
+
+```{r}
+lapply(numbats[c('scientificName', 'year', 'month', 'wday', 'hour', 'dryandra')] , table)
+```
+
+Let's barplot the year and the month column.
+
+```{r}
+barplot(table(numbats$year))
+```
+
+```{r}
+barplot(table(numbats$month)[month.abb])
+```
+
+Some months have higher sighting than others. This result will make sense if we learn about the animal a little more. So I am going to scrape the numbat bio page from [animalia.bio](https://animalia.bio).
+
+```{r}
+library(rvest)
+```
+
+```{r}
+numbats_bio <- read_html("https://animalia.bio/numbat")
+```
+
+```{r}
+all_tags <- html_nodes(numbats_bio, xpath = "//*")
+```
+
+```{r}
+all_tags %>% html_name() %>% table() %>% unlist()
+```
+
+I am assuming most of the information I am looking for are in primitive tags such as `h1`, `h2`, `h3`, `p` etc. Let's see what information is in the `h2` tags.
+
+```{r}
+all_h2_tags <- all_tags[html_name(all_tags) == 'h2']
+```
+
+```{r}
+all_h2_tags %>% html_text() %>% gsub("\n", "", .)
+```
+
+Looks like paragraph headlines to me. So I am expecting much of the bio information in the `p` tag elements.
+
+```{r}
+relevant_tags <- numbats_bio %>% html_nodes("h1, h2, h3, p")
+tag_type <- relevant_tags %>% html_name()
+selected_text <- relevant_tags %>% html_text() %>% gsub("\n", "", .)
+```
+
+```{r}
+(appearance_index <- grep("Appearance", selected_text))
+(photos_index <- grep("Photos withNumbat", selected_text))
+```
+
+Between two `h2` I am expecting a `p` tag. Let's actually verify that. Let's print the tag in-between.
+
+```{r}
+selected_text[36]
+```
+
+> ##### `r selected_text[36]`
+
+This means `h2` follows a description inside a `p` tag. The below function will print the two in pairs. Let's print the "Habits and Lifestyle" portion.
+
+```{r}
+print_text <- function(string) {
+  index <- grep(string, selected_text)
+  header_text <- selected_text[index]
+  index <- index + 1
+  while(tag_type[index] != "p") { index <- index + 1}
+  p_text <- selected_text[index]
+  return(paste(header_text, p_text, sep="\n"))
+}
+```
+
+```{r}
+(h_and_l <- print_text("Habits and Lifestyle"))
+```
+
+> ##### `r h_and_l`
+
+Now it makes sense. Their higher level of activity in summer and spring combined with the fact of their habitat being in Australia explains the spike of sighting in November and December.
+
+Let's print "Mating Habits"
+
+```{r}
+print_text("Mating Habits")
+```
+
+> ##### `r print_text("Mating Habits")`
+
+Their breeding period might explain the spike as well.
+
+"Diet and Nutrition" and other stuffs do not seem relevant to this dataset so I won't print them here.
+
+One thing repeating throughout the bio is their diurnal routine. Let's actually visualize that from the data.
+
+```{r}
+barplot(table(numbats$hour)[1:24])
+```
+
+There are a disproportionately higher number of sightings during 12 PM-1 PM GMT period. This could have resulted from a data bias. Perhaps, most of the expeditions to sight the numbats were conducted during that interval. Or perhaps, the expedition team entered the data usually at that time. Looking at the Tidy Tuesday github page, it seems that the hour column was created from the eventDate column. Let's look at a few values.
+
+```{r}
+set.seed(42)
+sample((numbats %>% filter(!is.na(eventDate)))$eventDate, 25)
+```
+
+A disproportionately high number of the events seem to have the time rounded up to the hour value. This could be a data entry decision in certain cases. However, it's not all of them. The more recent ones seem to have a detailed clock log. I am interested in the cases where it's not a rounded up time.
+
+```{r}
+numbat_sighting_subset <- numbats %>% filter(!is.na(eventDate))
+numbat_sighting_subset <- numbat_sighting_subset %>% filter(!(as.POSIXlt(eventDate)$min == 0))
+```
+
+We still have `r nrow(numbat_sighting_subset)` entries remaining.
+
+We have one more problem. The log time is UTC but we need to consider local time to properly visualize the diurnal life of numbats. That's why I use `tz_lookup()` function of the `lutz` library to lookup the timezone and convert UTC time to local time using `with_tz` function of the `lubridate`.
+
+```{r message=FALSE}
+library(lutz)
+library(lubridate)
+library(sf)
+```
+
+```{r}
+numbat_sighting_subset_sf <- st_as_sf(numbat_sighting_subset %>% filter(!is.na(decimalLongitude)),
+                                      coords=c("decimalLongitude", "decimalLatitude"), crs = 4326)
+```
+
+```{r}
+numbat_sighting_subset_sf$timezone <- numbat_sighting_subset_sf %>% tz_lookup(crs=4326, method='accurate', warn=FALSE)
+```
+
+```{r}
+numbat_sighting_subset_sf$updated_hour <- purrr::map2(.x= numbat_sighting_subset_sf$eventDate, 
+                                                      .y= numbat_sighting_subset_sf$timezone, 
+                                                      .f= function(x,y) {
+                                                        as.POSIXlt(with_tz(time=x, tzone=y))$hour
+                                                        })
+```
+
+After the local time conversion is done, let's visualize the sighting distribution across hours of the day.
+
+```{r}
+numbat_sighting_subset <- numbat_sighting_subset_sf %>% st_drop_geometry()
+```
+
+```{r}
+barplot(table(unlist(numbat_sighting_subset$updated_hour))[1:24])
+```
+
+Even with the limited data, we can see that there are a high number of sightings from 8PM-15PM. Our scraped numbat bio suggests a change in active period in different seasons but however with the limited data I am unable to test that out.
+
+Let's visualize these sightings in leaflet.
+
+```{r message=FALSE}
+library(leaflet)
+library(OpenStreetMap)
+```
+
+```{r}
+numbat_sf <- st_as_sf(numbats %>% filter(!is.na(decimalLongitude)),  coords=c("decimalLongitude", "decimalLatitude"), crs = 4326)
+(m <- leaflet() %>%
+  addTiles() %>% 
+  addProviderTiles("OpenStreetMap.HOT", group = "Humanitarian") %>% 
+  addTiles(options = providerTileOptions(noWrap = TRUE), group = "Default") %>% 
+  # addMarkers(lng = dhaka_long, lat = dhaka_lat, popup='Dhaka') %>% 
+  # addRectangles(bbox_val[[1]], bbox_val[[2]], bbox_val[[3]], bbox_val[[4]]) %>%
+  addMarkers(data=numbat_sf, clusterOptions = markerClusterOptions()))
+```
+
+Finally, I will couple that with the "Distribution" portion of the bio.
+
+```{r}
+print_text("Distribution")
+```
+
+> ##### `r print_text("Distribution")`
