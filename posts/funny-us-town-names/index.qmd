@@ -1,20 +1,31 @@
 ---
-title: "Funny Town"
+title: "Funny Town Names"
 author: "Fargana Islam"
 date: "2023-03-04"
 categories: [fun project]
 image: "Moody_AL.jpg"
+bibliography: packages.bib
+csl: the-open-university-numeric-superscript.csl
 ---
 
-Recently, I came across an web article titled [65 Funny Town Names Across the U.S.](https://www.farandwide.com/s/wacky-town-names-47d4c1c59a624a70) Ever since I started living in the states, I was awed by the simultaneous banality and eccentricity of the country's town names. As I was scrolling through the ad explosion of the article, I kept wondering what one has to do make such a list and also whether the list covers all the funny town names after all. So I decided to do this fun endeavor. Here are a few pictures showcasing some of the interesting names I found. The images are courtesy of Google Maps.
+Recently, I came across an web article titled **65 Funny Town Names Across the U.S.**[@farandwide-townnames]. Ever since I started living in the states, I was awed by the simultaneous banality and eccentricity of the country's town names. As I was scrolling through the ad explosion of the article, I kept wondering what one has to do make such a list and also whether the list covers all the funny town names after all. So I decided to do this fun endeavor. Here are a few street views showcasing some of the interesting names I found.
 
-![A church located in Man, West Virginia](Man_WV.jpg)
+## Police Department in Moody, Alabama
 
-![A motor shop located in Moody, Alabama](Moody_AL.jpg)
+```{=html}
+<iframe src="https://www.google.com/maps/embed?pb=!4v1680627627277!6m8!1m7!1shhXOMxMIh61Bal0dKsjsqA!2m2!1d33.59022253346379!2d-86.49220179852293!3f104.25015449097043!4f-7.917297842570093!5f3.325193203789971" width="800" height="600" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+```
+## THE TOWN OF MAN
 
-![A water tank located in Magazine, Arkansas](Magazine_AR.jpg)
+```{=html}
+<iframe src="https://www.google.com/maps/embed?pb=!4v1680624421331!6m8!1m7!1sMx28Xc93P-RXaE24GrASqw!2m2!1d37.74320181514975!2d-81.87344322477914!3f316.5714675379919!4f2.4538434744637527!5f0.7820865974627469" width="800" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+```
+## A water tank located in Magazine, Arkansas
 
-The endeavor would be incomplete if I don't list the names from the article first. But the invasive advertisement made it hard for me to scroll any farther down and I decided to scrape from the web article using RSelenium.
+```{=html}
+<iframe src="https://www.google.com/maps/embed?pb=!4v1680624895446!6m8!1m7!1sr77cpPgd0ODjSFby6pA8BA!2m2!1d35.14984093629869!2d-93.80822441862901!3f351.8082578784237!4f9.851322697549534!5f0.7820865974627469" width="800" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+```
+The endeavor would be incomplete if I don't list the names from the article first. But the invasive advertisement made it hard for me to scroll any farther down and I decided to scrape from the web article using RSelenium[@RSelenium].
 
 ```{r message=FALSE}
 library(rvest)
@@ -27,6 +38,10 @@ link <- "https://www.farandwide.com/s/wacky-town-names-47d4c1c59a624a70"
 ```
 
 I run the following command from the terminal to start the Docker container which will act like a server `docker run -d -p 4445:4444 selenium/standalone-firefox`. Then I use `RSelenium` to launch a headless browser from the server which will read the article for me. The browser loads the webpage and keeps pressing `End` key to scroll down and get a glimpse of everything. Finally, it collects the names from the element of interest.
+
+```{r eval=FALSE}
+system("docker run -d -p 4445:4444 selenium/standalone-firefox")
+```
 
 ```{r eval=FALSE}
 remDr <- remoteDriver(
@@ -94,11 +109,11 @@ Here's the final list.
 all_funny_names$x
 ```
 
-This web article is certainly not the first one to march this direction. A quick Google search gave me a book titled "**The Cafeteria Lady Eats Her Way Across America: And Lives to Tell About It!"** which has a chapter"A Town By Any Other Name" dedicated to stringing these names together into a narrative. Luckily, these pages are available for preview in the Google books website so if anybody wants they can check it out. There's also a line in one of the Wrens' song "Why into Whynot" but I have no proof they meant the towns Why, Arizona and Whynot, North Carolina.
+This web article is certainly not the first one to march this direction. A quick Google search gave me a book titled **The Cafeteria Lady Eats Her Way Across America: And Lives to Tell About It!**[@cafeteria-lady] which has a chapter "A Town By Any Other Name" dedicated to stringing these names together into a narrative. Luckily, these pages are available for preview in the Google books website so if anybody wants they can check it out. There's also a line in one of the Wrens' song "Why into Whynot" but I have no proof they meant the towns Why, Arizona and Whynot, North Carolina.
 
-Inspired by these, I wanted to make a comprehensive list of all the names. So I went looking for the largest list of US town names available in the internet. There were quite a few and one from the [Github](https://github.com/grammakov/USA-cities-and-states) had 60k+ records. Of course, I am not going to comb through this list so I started thinking of better approaches.
+Inspired by these, I wanted to make a comprehensive list of all the names. So I went looking for the largest list of US town names available in the internet. There were quite a few and one from the Github[@ustowndata] had 60k+ records. Of course, I am not going to comb through this list so I started thinking of better approaches.
 
-The first idea that I had was to use a dictionary. Most of the words in the web article and the book were actually dictionary words except for a few goofy ones. So I decided to use the hunspell library to filter out town names that are not dictionary words.
+The first idea that I had was to use a dictionary. Most of the words in the web article and the book were actually dictionary words except for a few goofy ones. So I decided to use the hunspell[@hunspell] library to filter out town names that are not dictionary words.
 
 ```{r}
 all_town_df <- read.csv('us_cities_states_counties.csv', sep="|")
@@ -135,7 +150,7 @@ less_common_town_names %>% head(50)
 
 As much as it is interesting to hear about Alabama, New York, I am looking for something that gives a stronger kick upon hearing it. There are enough Paris, Texas references in the world for it to have become trivial by now. There are also people names such as Abraham, Agnes, Adolph that are in the `hunspell` dictionary that are better off being filtered. In fact, therein lies the problem. `hunspell` dictionary is too much inclusive for our task. We need a dictionary that is less interested in the proper nouns.
 
-After looking around for a while, I found the [freeDictionaryAPI](https://dictionaryapi.dev/) which can be queried using the url `https://api.dictionaryapi.dev/api/v2/entries/en/{word}`. So I initially tried to use `url_exists()` function of `RCurl` library but that ended up in 429 errors (too many requests). I could have used `Sys.sleep()` but I decided to poke around the freeDictionaryAPI looking for ways to query with multiple words. I found something even better. There is a word list directly available in their Github page.
+After looking around for a while, I found the freeDictionaryAPI[@freedictionaryapi] which can be queried using the url `https://api.dictionaryapi.dev/api/v2/entries/en/{word}`. So I initially tried to use `url_exists()` function of `RCurl` library but that ended up in Error 429 (too many requests). I could have used `Sys.sleep()` but I decided to poke around the freeDictionaryAPI looking for ways to query with multiple words. I found something even better. There is a word list directly available in their Github page.
 
 ```{r}
 dictionary_file <- file('freeDictionaryAPI.txt')
@@ -194,7 +209,7 @@ Some names that really surprised me:
 
 -   Republican, Arkansas
 
-One final thing I want to do is show the remaining towns on the `OpenStreetMap` using `Leaflet`. But before I do that, I need to actually get their location.
+One final thing I want to do is show the remaining towns on the `OpenStreetMap`[@OpenStreetMap] using `Leaflet`[@leaflet]. But before I do that, I need to actually get their location. I will use `ggmap`[@ggmap] for that.
 
 ```{r}
 funny_town_df <- all_town_df %>% filter(City.alias %in% town_names)
