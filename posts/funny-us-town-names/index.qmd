@@ -3,17 +3,17 @@ title: "Funny Town Names"
 author: "Fargana Islam"
 date: "2023-03-04"
 categories: [fun project]
-image: "Moody_AL.jpg"
+image: "why.jpeg"
 bibliography: packages.bib
 csl: the-open-university-numeric-superscript.csl
 ---
 
 Recently, I came across an web article titled **65 Funny Town Names Across the U.S.**[@farandwide-townnames]. Ever since I started living in the states, I was awed by the simultaneous banality and eccentricity of the country's town names. As I was scrolling through the ad explosion of the article, I kept wondering what one has to do make such a list and also whether the list covers all the funny town names after all. So I decided to do this fun endeavor. Here are a few street views showcasing some of the interesting names I found.
 
-## Police Department in Moody, Alabama
+## Fire Station in Moody, Alabama
 
 ```{=html}
-<iframe src="https://www.google.com/maps/embed?pb=!4v1680627627277!6m8!1m7!1shhXOMxMIh61Bal0dKsjsqA!2m2!1d33.59022253346379!2d-86.49220179852293!3f104.25015449097043!4f-7.917297842570093!5f3.325193203789971" width="800" height="600" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+<iframe src="https://www.google.com/maps/embed?pb=!4v1680709486226!6m8!1m7!1ssd3J9_HiTgILtzD_N4wxcQ!2m2!1d33.59081587532894!2d-86.4916798974462!3f107.8!4f-1.3599999999999994!5f3.325193203789971" width="800" height="600" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
 ```
 ## THE TOWN OF MAN
 
